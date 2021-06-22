@@ -13,6 +13,9 @@
 /artifacts
 /cache
 
+src/addresses/
+src/abis
+
 
 # misc
 .DS_Store

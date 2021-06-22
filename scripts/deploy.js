@@ -29,6 +29,7 @@ async function main() {
 
    // Deploy Timelock
    const delay = 172800;
+  
    const Timelock = await ethers.getContractFactory("Timelock");
    const timelock = await Timelock.deploy(timelockAdmin.address, delay);
    await timelock.deployed();
@@ -40,60 +41,52 @@ async function main() {
    await gov.deployed();
    await gov.deployTransaction.wait();
 
+
    console.log(`Token deployed to: ${token.address}`);
    console.log(`TimeLock deployed to: ${timelock.address}`);
    console.log(`GovernorAlpha deployed to: ${gov.address}`)
 
   const initialBalance = await token.balanceOf(tokenRecipient.address);
   console.log(`${initialBalance / 1e18} tokens transfered to ${tokenRecipient.address}`);
+
+
   // We also save the contract's artifacts and address in the frontend directory
-  saveFrontendTokenFiles(token);
-  saveFrontendGovernorFiles(gov);
+  saveFrontendFiles(token, gov);
 }
 
-function saveFrontendTokenFiles(token) {
+function saveFrontendFiles(token, gov) {
   const fs = require("fs");
-  const contractsDir = __dirname + "/../contracts";
+  const abisDir = __dirname + "/../src/abis";
+  const addressesDir = __dirname + "/../src/addresses";
 
-  if (!fs.existsSync(contractsDir)) {
-    fs.mkdirSync(contractsDir);
+  if (!fs.existsSync(abisDir)) {
+    fs.mkdirSync(abisDir);
   }
 
+  if (!fs.existsSync(addressesDir)) {
+    fs.mkdirSync(addressesDir);
+  }
+
+  
   fs.writeFileSync(
-    contractsDir + "/token-address.json",
-    JSON.stringify({ Token: token.address }, undefined, 2)
+    addressesDir + "/index.js",
+    "export const Addresses = {COMP: '" + token.address + "', GOVERNOR: '" + gov.address + "'}"
   );
 
   const TokenArtifact = artifacts.readArtifactSync("Comp");
+  const GovArtifact = artifacts.readArtifactSync("GovernorAlpha");
 
   fs.writeFileSync(
-    contractsDir + "/Comp.json",
+    abisDir + "/Comp.json",
     JSON.stringify(TokenArtifact, null, 2)
+  );
+
+  fs.writeFileSync(
+    abisDir + "/Governor.json",
+    JSON.stringify(GovArtifact, null, 2)
   );
 }
 
-
-
-function saveFrontendGovernorFiles(gov) {
-  const fs = require("fs");
-  const contractsDir = __dirname + "/../contracts";
-
-  if (!fs.existsSync(contractsDir)) {
-    fs.mkdirSync(contractsDir);
-  }
-
-  fs.writeFileSync(
-    contractsDir + "/governor-address.json",
-    JSON.stringify({ Governor: gov.address }, undefined, 2)
-  );
-
-  const TokenArtifact = artifacts.readArtifactSync("GovernorAlpha");
-
-  fs.writeFileSync(
-    contractsDir + "/Governor.json",
-    JSON.stringify(TokenArtifact, null, 2)
-  );
-}
 
 main()
   .then(() => process.exit(0))
